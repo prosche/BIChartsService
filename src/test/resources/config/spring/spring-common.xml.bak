@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xsi:schemaLocation="
+        http://www.springframework.org/schema/beans     
+        http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context-3.1.xsd
+        http://www.springframework.org/schema/aop
+        http://www.springframework.org/schema/aop/spring-aop-3.1.xsd
+        http://www.springframework.org/schema/tx
+        http://www.springframework.org/schema/tx/spring-tx-3.1.xsd"
+	default-autowire="byName" default-lazy-init="true">
+	<!-- Hibernate4 -->
+	<!-- 加载资源文件 其中包含变量信息，必须在Spring配置文件的最前面加载，即第一个加载 -->
+	<context:property-placeholder
+		location="classpath*:config/spring/jdbc.properties" />
+
+	<!-- 配置数据源 -->
+	<!-- <bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource"> 
+		<property name="driverClassName" value="${jdbc.driver}"> </property> <property 
+		name="url" value="${jdbc.url}"> </property> <property name="username" value="${jdbc.name}"></property> 
+		<property name="password" value="${jdbc.passwd}"></property> 连接池启动时的初始值 <property 
+		name="initialSize" value="1" /> <property name="maxActive" value="500" /> 
+		<property name="maxIdle" value="2" /> <property name="minIdle" value="1" 
+		/> </bean> -->
+
+	<!-- c3p0式数据源和数据库连接池 -->
+	<!-- 配置说明官网：http://www.mchange.com/projects/c3p0/ -->
+	<bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource"
+		destroy-method="close">
+		<property name="driverClass" value="${dataSource.driver}"></property>
+		<property name="jdbcUrl" value="${dataSource.url}"></property>
+		<property name="user" value="${dataSource.name}"></property>
+		<property name="password" value="${dataSource.passwd}"></property>
+
+		<property name="minPoolSize" value="10"></property>
+		<!--初始化时获取15个连接，取值应在minPoolSize与maxPoolSize之间。Default: 3 -->
+		<property name="initialPoolSize" value="15"></property>
+		<!--连接池中保留的最大连接数。Default: 15 -->
+		<property name="maxPoolSize" value="30"></property>
+		<!--当连接池用完时客户端调用getConnection()后等待获取新连接的时间，超时后将抛出 SQLException,如设为0则无限期等待。单位毫秒。Default: 
+			0 -->
+		<property name="checkoutTimeout" value="3000"></property>
+		<!--当连接池中的连接耗尽的时候c3p0一次同时获取的连接数。Default: 3 -->
+		<property name="acquireIncrement" value="2"></property>
+		<!--定义在从数据库获取新连接失败后重复尝试的次数。Default: 30 -->
+		<property name="acquireRetryAttempts" value="5"></property>
+		<!--两次连接间隔时间，单位毫秒。Default: 1000 -->
+		<property name="acquireRetryDelay" value="1000"></property>
+		<!--连接关闭时默认将所有未提交的操作回滚。Default: false -->
+		<property name="autoCommitOnClose" value="false"></property>
+		<!--获取连接失败将会引起所有等待连接池来获取连接的线程抛出异常。但是数据源仍有效 保留，并在下次调用getConnection()的时候继续尝试获取连接。如果设为true，那么在尝试 
+			获取连接失败后该数据源将申明已断开并永久关闭。Default: false -->
+		<property name="breakAfterAcquireFailure" value="false"></property>
+		<!-- 符合JDBC标准、用于控制 PreparedStatements 数量的参数，数据源中单个连接缓存的 PreparedStatements 
+			数量， 与 maxStatementsPerConnection（非标准） 参数有点像 -->
+		<property name="maxStatements" value="100"></property>
+		<!--最大空闲时间，指定秒内未使用则连接被丢弃。若为0则永不丢弃。Default: 0 -->
+		<property name="maxIdleTime" value="0"></property>
+		<!--每1200秒检查所有连接池中的空闲连接。Default: 0 -->
+		<property name="idleConnectionTestPeriod" value="1200"></property>
+		<!--如果设为true那么在取得连接的同时将校验连接的有效性。Default: false -->
+		<property name="testConnectionOnCheckin" value="true"></property>
+		<!--c3p0将建一张名为testConnection的空表，并使用其自带的查询语句进行测试。如果定义了这个参数那么 属性preferredTestQuery将被忽略。你不能在这张testConnection表上进行任何操作，它将只供c3p0测试 
+			使用。Default: null -->
+		<property name="automaticTestTable" value="testConnection"></property>
+	</bean>
+	
+	<!-- proxool式数据源和数据库连接池 -->  
+    <bean id="dataSource" class="org.logicalcobwebs.proxool.ProxoolDataSource">  
+        <property name="driver" value="${dataSource.driver}"></property>  
+        <property name="driverUrl" value="${dataSource.url}"></property>  
+        <property name="user" value="${dataSource.name}"></property>  
+        <property name="password" value="${dataSource.passwd}"></property>  
+        <property name="maximumActiveTime" value="300000"></property>  
+        <!-- 最少保持的空闲连接数   -->
+        <property name="prototypeCount" value="5"></property>  
+        <!-- 最小连接数   -->
+        <property name="minimumConnectionCount" value="2"></property>  
+        <property name="maximumConnectionCount" value="50"></property>  
+        <property name="simultaneousBuildThrottle" value="50"></property>  
+    </bean>  
+      
+
+	<!-- 配置SessionFactory -->
+	<bean id="sessionFactory"
+		class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="hibernateProperties">
+			<props>
+				<prop key="hibernate.dialect">org.hibernate.dialect.Oracle9iDialect</prop>
+				<prop key="hibernate.show_sql">true</prop>
+			</props>
+		</property>
+		<!-- 自动扫描指定位置下的实体文件进行映射 -->
+		<!-- <property name="packagesToScan" value="ai.bi.com.charts.model" /> -->
+		<property name="packagesToScan">
+			<list>
+				<value>ai.bi.com.charts.model</value><!-- 扫描实体类 -->
+			</list>
+		</property>
+	</bean>
+
+	<!-- Hibernate Template bean that will be assigned to DAOs. -->
+	<!-- <bean id="hibernateTemplate" class="org.springframework.orm.hibernate3.HibernateTemplate"> 
+		<property name="sessionFactory" ref="sessionFactory" /> </bean> -->
+
+	<!-- 配置Hibernate事务管理器 -->
+	<!-- Transaction manager for a single Hibernate SessionFactory (alternative 
+		to JTA) -->
+	<bean id="transactionManager"
+		class="org.springframework.orm.hibernate4.HibernateTransactionManager">
+		<property name="sessionFactory" ref="sessionFactory" />
+	</bean>
+
+	<!-- 配置事务管理器，使用拦截器声明式事务 -->
+	<bean id="transactionInterceptor"
+		class="org.springframework.transaction.interceptor.TransactionInterceptor">
+		<property name="transactionManager" ref="transactionManager" />
+		<!-- 配置事务属性 -->
+		<property name="transactionAttributes">
+			<props>
+				<!-- PROPAGATION_REQUIRED：支持当前事务，如果当前没有事务，则新建一个事务 -->
+				<prop key=" save* "> PROPAGATION_REQUIRED </prop>
+				<prop key=" update* "> PROPAGATION_REQUIRED </prop>
+				<prop key=" delete* "> PROPAGATION_REQUIRED </prop>
+				<prop key=" find* "> PROPAGATION_REQUIRED </prop>
+				<prop key=" get* "> PROPAGATION_REQUIRED </prop>
+				<prop key=" execute* "> PROPAGATION_REQUIRED </prop>
+				<prop key=" load* "> PROPAGATION_REQUIRED </prop>
+				<prop key=" merge* "> PROPAGATION_REQUIRED </prop>
+				<prop key=" add* "> PROPAGATION_REQUIRED </prop>
+			</props>
+		</property>
+	</bean>
+	<bean
+		class="org.springframework.aop.framework.autoproxy.BeanNameAutoProxyCreator">
+		<property name="beanNames">
+			<list>
+				<value>*ServiceImpl</value>
+			</list>
+		</property>
+		<property name="interceptorNames">
+			<list>
+				<value>transactionInterceptor</value>
+			</list>
+		</property>
+	</bean>
+
+	<!-- 基于注释的事务，当注释中发现@Transactional时，使用id为“transactionManager”的事务管理器 -->
+	<!-- 如果没有设置transaction-manager的值，则spring以缺省默认的事务管理器来处理事务，默认事务管理器为第一个加载的事务管理器 -->
+	<!-- <tx:annotation-driven transaction-manager="transactionManager"/> -->
+
+</beans>
