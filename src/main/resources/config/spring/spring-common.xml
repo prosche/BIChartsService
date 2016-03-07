@@ -13,25 +13,31 @@
         http://www.springframework.org/schema/tx
         http://www.springframework.org/schema/tx/spring-tx-3.1.xsd"
 	default-autowire="byName" default-lazy-init="true">
+	
 	<!-- Hibernate4 -->
 	<!-- 加载资源文件 其中包含变量信息，必须在Spring配置文件的最前面加载，即第一个加载 -->
-	<context:property-placeholder
-		location="classpath*:config/spring/jdbc.properties" />
+<!-- 	<context:property-placeholder
+		location="classpath*:config/spring/jdbc.properties" /> -->
+	<bean id="dataSource" class="org.springframework.jndi.JndiObjectFactoryBean">
+		<property name="jndiName">
+			<value>java:comp/env/jdbc/BIChartsService</value>
+		</property>
+	</bean>
 	
 	<!-- proxool式数据源和数据库连接池 -->  
-    <bean id="dataSource" class="org.logicalcobwebs.proxool.ProxoolDataSource">  
+<!--     <bean id="dataSource" class="org.logicalcobwebs.proxool.ProxoolDataSource">  
         <property name="driver" value="${dataSource.driver}"></property>  
         <property name="driverUrl" value="${dataSource.url}"></property>  
         <property name="user" value="${dataSource.name}"></property>  
         <property name="password" value="${dataSource.passwd}"></property>  
         <property name="maximumActiveTime" value="300000"></property>  
-        <!-- 最少保持的空闲连接数   -->
+        最少保持的空闲连接数  
         <property name="prototypeCount" value="5"></property>  
-        <!-- 最小连接数   -->
+        最小连接数  
         <property name="minimumConnectionCount" value="2"></property>  
         <property name="maximumConnectionCount" value="50"></property>  
         <property name="simultaneousBuildThrottle" value="50"></property>  
-    </bean>  
+    </bean>   -->
 
 	<!-- 配置SessionFactory -->
 	<bean id="sessionFactory"

@@ -63,4 +63,11 @@
 		<filter-name>openSession</filter-name>
 		<url-pattern>/*</url-pattern>
 	</filter-mapping>
+	
+		<resource-ref>
+		<description>JNDI DataSource</description>
+		<res-ref-name>jdbc/BIChartsService</res-ref-name>
+		<res-type>javax.sql.DataSource</res-type>
+		<res-auth>Container</res-auth>
+	</resource-ref>
 </web-app>
